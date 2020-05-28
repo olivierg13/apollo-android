@@ -80,15 +80,15 @@ class RepositoryDetailActivity : AppCompatActivity() {
   @SuppressLint("SetTextI18n")
   private fun updateUI(response: Response<GithubRepositoryDetailQuery.Data>) {
     response.data?.viewer?.repository?.fragments?.repositoryDetail?.run {
-      tvRepositoryName.text = name
-      tvRepositoryDescription.text = description
+      tvRepositoryName.text = fragments.repositoryFragment.name
+      tvRepositoryDescription.text = fragments.repositoryFragment.description
       tvRepositoryForks.text = "$forkCount Forks"
       tvRepositoryIssues.text = "${issues.totalCount} Issues"
       tvRepositoryPullRequests.text = "${pullRequests.totalCount} Pull requests"
       tvRepositoryReleases.text = "${releases.totalCount} Releases"
       tvRepositoryStars.text = "${stargazers.totalCount} Stars"
       buttonCommits.setOnClickListener {
-        CommitsActivity.start(this@RepositoryDetailActivity, name)
+        CommitsActivity.start(this@RepositoryDetailActivity, fragments.repositoryFragment.name)
       }
     }
   }

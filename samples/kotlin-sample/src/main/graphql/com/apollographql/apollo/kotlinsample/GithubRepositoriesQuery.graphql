@@ -21,3 +21,33 @@ fragment RepositoryFragment on Repository {
   name
   description
 }
+
+query GithubRepositoryDetail(
+  $name: String!
+  $pullRequestStates: [PullRequestState!]!
+) {
+  viewer {
+    repository(name: $name) {
+      # parent {
+      ...RepositoryDetail
+      # }
+    }
+  }
+}
+
+fragment RepositoryDetail on Repository {
+  ...RepositoryFragment
+  issues {
+    totalCount
+  }
+  pullRequests(states: $pullRequestStates) {
+    totalCount
+  }
+  stargazers {
+    totalCount
+  }
+  forkCount
+  releases {
+    totalCount
+  }
+}
