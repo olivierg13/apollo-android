@@ -10,6 +10,8 @@ import com.apollographql.apollo.cache.http.ApolloHttpCache
 import com.apollographql.apollo.cache.http.DiskLruHttpCacheStore
 import com.apollographql.apollo.cache.normalized.CacheKey
 import com.apollographql.apollo.cache.normalized.CacheKeyResolver
+import com.apollographql.apollo.cache.normalized.lru.EvictionPolicy
+import com.apollographql.apollo.cache.normalized.lru.LruNormalizedCacheFactory
 import com.apollographql.apollo.cache.normalized.sql.SqlNormalizedCacheFactory
 import com.apollographql.apollo.kotlinsample.data.ApolloCallbackService
 import com.apollographql.apollo.kotlinsample.data.ApolloCoroutinesService
@@ -57,14 +59,13 @@ class KotlinSampleApp : Application() {
       }
     }
 
-    // Create the http response cache store
-    val cacheStore = DiskLruHttpCacheStore(File(cacheDir, "apolloCache"), 1024 * 1024)
+    val memoryFirstThenSqlCacheFactory = LruNormalizedCacheFactory(
+        EvictionPolicy.builder().maxSizeBytes(10 * 1024).build()
+    ).chain(sqlNormalizedCacheFactory)
 
     ApolloClient.builder()
         .serverUrl(baseUrl)
-        .normalizedCache(sqlNormalizedCacheFactory, cacheKeyResolver)
-        .httpCache(ApolloHttpCache(cacheStore))
-        .defaultHttpCachePolicy(HttpCachePolicy.CACHE_FIRST)
+        .normalizedCache(memoryFirstThenSqlCacheFactory, cacheKeyResolver)
         .okHttpClient(okHttpClient)
         .build()
   }
