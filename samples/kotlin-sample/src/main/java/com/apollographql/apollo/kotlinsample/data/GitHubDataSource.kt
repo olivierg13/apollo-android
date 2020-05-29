@@ -5,6 +5,7 @@ import com.apollographql.apollo.api.Response
 import com.apollographql.apollo.kotlinsample.GithubRepositoriesQuery
 import com.apollographql.apollo.kotlinsample.GithubRepositoryCommitsQuery
 import com.apollographql.apollo.kotlinsample.GithubRepositoryDetailQuery
+import com.apollographql.apollo.kotlinsample.GithubRepositorySummaryQuery
 import com.apollographql.apollo.kotlinsample.fragment.RepositoryFragment
 import io.reactivex.Observable
 import io.reactivex.subjects.PublishSubject
@@ -16,16 +17,19 @@ import io.reactivex.subjects.PublishSubject
  */
 abstract class  GitHubDataSource(protected val apolloClient: ApolloClient) {
   protected val repositoriesSubject: PublishSubject<List<RepositoryFragment>> = PublishSubject.create()
+  protected val repositorySummarySubject: PublishSubject<Response<GithubRepositorySummaryQuery.Data>> = PublishSubject.create()
   protected val repositoryDetailSubject: PublishSubject<Response<GithubRepositoryDetailQuery.Data>> = PublishSubject.create()
   protected val commitsSubject: PublishSubject<List<GithubRepositoryCommitsQuery.Edge>> = PublishSubject.create()
   protected val exceptionSubject: PublishSubject<Throwable> = PublishSubject.create()
 
   val repositories: Observable<List<RepositoryFragment>> = repositoriesSubject.hide()
+  val repositorySummary: Observable<Response<GithubRepositorySummaryQuery.Data>> = repositorySummarySubject.hide()
   val repositoryDetail: Observable<Response<GithubRepositoryDetailQuery.Data>> = repositoryDetailSubject.hide()
   val commits: Observable<List<GithubRepositoryCommitsQuery.Edge>> = commitsSubject.hide()
   val error: Observable<Throwable> = exceptionSubject.hide()
 
   abstract fun fetchRepositories()
+  abstract fun fetchRepositorySummary(repositoryName: String)
   abstract fun fetchRepositoryDetail(repositoryName: String)
   abstract fun fetchCommits(repositoryName: String)
   abstract fun cancelFetching()

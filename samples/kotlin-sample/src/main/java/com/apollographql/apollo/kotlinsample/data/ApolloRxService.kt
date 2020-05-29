@@ -5,6 +5,7 @@ import com.apollographql.apollo.api.cache.http.HttpCachePolicy
 import com.apollographql.apollo.kotlinsample.GithubRepositoriesQuery
 import com.apollographql.apollo.kotlinsample.GithubRepositoryCommitsQuery
 import com.apollographql.apollo.kotlinsample.GithubRepositoryDetailQuery
+import com.apollographql.apollo.kotlinsample.GithubRepositorySummaryQuery
 import com.apollographql.apollo.kotlinsample.type.OrderDirection
 import com.apollographql.apollo.kotlinsample.type.PullRequestState
 import com.apollographql.apollo.kotlinsample.type.RepositoryOrderField
@@ -36,6 +37,22 @@ class ApolloRxService(
         .map(this::mapRepositoriesResponseToRepositories)
         .subscribe(
             repositoriesSubject::onNext,
+            exceptionSubject::onNext
+        )
+
+    compositeDisposable.add(disposable)
+  }
+
+  override fun fetchRepositorySummary(repositoryName: String) {
+    val repositorySummaryQuery = GithubRepositorySummaryQuery(
+        name = repositoryName
+    )
+
+    val disposable = apolloClient.rxQuery(repositorySummaryQuery)
+        .subscribeOn(processScheduler)
+        .observeOn(resultScheduler)
+        .subscribe(
+            repositorySummarySubject::onNext,
             exceptionSubject::onNext
         )
 

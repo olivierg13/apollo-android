@@ -5,6 +5,7 @@ import com.apollographql.apollo.coroutines.toDeferred
 import com.apollographql.apollo.kotlinsample.GithubRepositoriesQuery
 import com.apollographql.apollo.kotlinsample.GithubRepositoryCommitsQuery
 import com.apollographql.apollo.kotlinsample.GithubRepositoryDetailQuery
+import com.apollographql.apollo.kotlinsample.GithubRepositorySummaryQuery
 import com.apollographql.apollo.kotlinsample.type.OrderDirection
 import com.apollographql.apollo.kotlinsample.type.PullRequestState
 import com.apollographql.apollo.kotlinsample.type.RepositoryOrderField
@@ -33,6 +34,24 @@ class ApolloCoroutinesService(
         val response = apolloClient.query(repositoriesQuery).toDeferred().await()
         withContext(resultContext) {
           repositoriesSubject.onNext(mapRepositoriesResponseToRepositories(response))
+        }
+      } catch (e: Exception) {
+        exceptionSubject.onNext(e)
+      }
+    }
+  }
+
+  override fun fetchRepositorySummary(repositoryName: String) {
+    val repositorySummaryQuery = GithubRepositorySummaryQuery(
+        name = repositoryName
+    )
+
+    job = CoroutineScope(processContext).launch {
+      try {
+        val response = apolloClient.query(repositorySummaryQuery).toDeferred().await()
+
+        withContext(resultContext) {
+          repositorySummarySubject.onNext(response)
         }
       } catch (e: Exception) {
         exceptionSubject.onNext(e)

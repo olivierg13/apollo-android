@@ -22,6 +22,18 @@ fragment RepositoryFragment on Repository {
   description
 }
 
+query GithubRepositorySummary(
+  $name: String!
+) {
+  viewer {
+    repository(name: $name) {
+      # parent {
+      ...RepositoryFragment
+      # }
+    }
+  }
+}
+
 query GithubRepositoryDetail(
   $name: String!
   $pullRequestStates: [PullRequestState!]!

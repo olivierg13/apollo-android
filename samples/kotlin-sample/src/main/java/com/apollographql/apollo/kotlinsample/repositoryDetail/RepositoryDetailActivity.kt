@@ -8,6 +8,7 @@ import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import com.apollographql.apollo.api.Response
 import com.apollographql.apollo.kotlinsample.GithubRepositoryDetailQuery
+import com.apollographql.apollo.kotlinsample.GithubRepositorySummaryQuery
 import com.apollographql.apollo.kotlinsample.KotlinSampleApp
 import com.apollographql.apollo.kotlinsample.R
 import com.apollographql.apollo.kotlinsample.commits.CommitsActivity
@@ -24,13 +25,15 @@ class RepositoryDetailActivity : AppCompatActivity() {
     (application as KotlinSampleApp).getDataSource()
   }
 
+  private var repoName: String = ""
+
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     setContentView(R.layout.activity_repository_detail)
 
     setupDataSource()
 
-    val repoName = intent.getStringExtra(REPO_NAME_KEY)
+    repoName = intent.getStringExtra(REPO_NAME_KEY)
     supportActionBar?.title = repoName
 
     fetchRepository(repoName)
@@ -43,7 +46,12 @@ class RepositoryDetailActivity : AppCompatActivity() {
   }
 
   private fun setupDataSource() {
-    val successDisposable = dataSource.repositoryDetail
+    val successSummaryDisposable = dataSource.repositorySummary
+        .subscribeOn(Schedulers.io())
+        .observeOn(AndroidSchedulers.mainThread())
+        .subscribe(this::handleSummaryResponse)
+
+    val successDetailDisposable = dataSource.repositoryDetail
         .subscribeOn(Schedulers.io())
         .observeOn(AndroidSchedulers.mainThread())
         .subscribe(this::handleDetailResponse)
@@ -53,8 +61,13 @@ class RepositoryDetailActivity : AppCompatActivity() {
         .observeOn(AndroidSchedulers.mainThread())
         .subscribe(this::handleError)
 
-    compositeDisposable.add(successDisposable)
+    compositeDisposable.add(successSummaryDisposable)
+    compositeDisposable.add(successDetailDisposable)
     compositeDisposable.add(errorDisposable)
+  }
+
+  private fun handleSummaryResponse(response: Response<GithubRepositorySummaryQuery.Data>) {
+    dataSource.fetchRepositoryDetail(repositoryName = repoName)
   }
 
   private fun handleDetailResponse(response: Response<GithubRepositoryDetailQuery.Data>) {
@@ -74,7 +87,7 @@ class RepositoryDetailActivity : AppCompatActivity() {
   private fun fetchRepository(repoName: String) {
     buttonCommits.visibility = View.GONE
 
-    dataSource.fetchRepositoryDetail(repositoryName = repoName)
+    dataSource.fetchRepositorySummary(repositoryName = repoName)
   }
 
   @SuppressLint("SetTextI18n")

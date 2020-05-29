@@ -48,14 +48,18 @@ class KotlinSampleApp : Application() {
     val cacheKeyResolver = object : CacheKeyResolver() {
       override fun fromFieldRecordSet(field: ResponseField, recordSet: Map<String, Any>): CacheKey {
         return if (recordSet["__typename"] == "Repository") {
-          CacheKey(recordSet["id"] as String)
+          CacheKey(recordSet["name"] as String)
         } else {
           CacheKey.NO_KEY
         }
       }
 
       override fun fromFieldArguments(field: ResponseField, variables: Operation.Variables): CacheKey {
-        return CacheKey.NO_KEY
+        return if (variables.valueMap().containsKey("name")) {
+          CacheKey(variables.valueMap()["name"] as String)
+        } else {
+          CacheKey.NO_KEY
+        }
       }
     }
 
