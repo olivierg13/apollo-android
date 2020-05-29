@@ -67,14 +67,15 @@ class RepositoryDetailActivity : AppCompatActivity() {
   }
 
   private fun handleSummaryResponse(response: Response<GithubRepositorySummaryQuery.Data>) {
+    progressBar.visibility = View.GONE
+    tvError.visibility = View.GONE
+    buttonCommits.visibility = View.VISIBLE
+    updateUISummary(response)
     dataSource.fetchRepositoryDetail(repositoryName = repoName)
   }
 
   private fun handleDetailResponse(response: Response<GithubRepositoryDetailQuery.Data>) {
-    progressBar.visibility = View.GONE
-    tvError.visibility = View.GONE
-    buttonCommits.visibility = View.VISIBLE
-    updateUI(response)
+    updateUIDetail(response)
   }
 
   private fun handleError(error: Throwable?) {
@@ -90,8 +91,18 @@ class RepositoryDetailActivity : AppCompatActivity() {
     dataSource.fetchRepositorySummary(repositoryName = repoName)
   }
 
+  private fun updateUISummary(response: Response<GithubRepositorySummaryQuery.Data>) {
+    response.data?.viewer?.repository?.fragments?.repositoryFragment?.run {
+      tvRepositoryName.text = name
+      tvRepositoryDescription.text = description
+      buttonCommits.setOnClickListener {
+        CommitsActivity.start(this@RepositoryDetailActivity, name)
+      }
+    }
+  }
+
   @SuppressLint("SetTextI18n")
-  private fun updateUI(response: Response<GithubRepositoryDetailQuery.Data>) {
+  private fun updateUIDetail(response: Response<GithubRepositoryDetailQuery.Data>) {
     response.data?.viewer?.repository?.fragments?.repositoryDetail?.run {
       tvRepositoryName.text = fragments.repositoryFragment.name
       tvRepositoryDescription.text = fragments.repositoryFragment.description
