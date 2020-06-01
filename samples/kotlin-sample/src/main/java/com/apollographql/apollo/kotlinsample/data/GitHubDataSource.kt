@@ -6,7 +6,7 @@ import com.apollographql.apollo.kotlinsample.GithubRepositoriesQuery
 import com.apollographql.apollo.kotlinsample.GithubRepositoryCommitsQuery
 import com.apollographql.apollo.kotlinsample.GithubRepositoryDetailQuery
 import com.apollographql.apollo.kotlinsample.GithubRepositorySummaryQuery
-import com.apollographql.apollo.kotlinsample.fragment.RepositoryFragment
+import com.apollographql.apollo.kotlinsample.fragment.RepositorySummary
 import io.reactivex.Observable
 import io.reactivex.subjects.PublishSubject
 
@@ -16,13 +16,13 @@ import io.reactivex.subjects.PublishSubject
  * to the public Observables that activities can subscribe to for information.
  */
 abstract class  GitHubDataSource(protected val apolloClient: ApolloClient) {
-  protected val repositoriesSubject: PublishSubject<List<RepositoryFragment>> = PublishSubject.create()
+  protected val repositoriesSubject: PublishSubject<List<RepositorySummary>> = PublishSubject.create()
   protected val repositorySummarySubject: PublishSubject<Response<GithubRepositorySummaryQuery.Data>> = PublishSubject.create()
   protected val repositoryDetailSubject: PublishSubject<Response<GithubRepositoryDetailQuery.Data>> = PublishSubject.create()
   protected val commitsSubject: PublishSubject<List<GithubRepositoryCommitsQuery.Edge>> = PublishSubject.create()
   protected val exceptionSubject: PublishSubject<Throwable> = PublishSubject.create()
 
-  val repositories: Observable<List<RepositoryFragment>> = repositoriesSubject.hide()
+  val repositories: Observable<List<RepositorySummary>> = repositoriesSubject.hide()
   val repositorySummary: Observable<Response<GithubRepositorySummaryQuery.Data>> = repositorySummarySubject.hide()
   val repositoryDetail: Observable<Response<GithubRepositoryDetailQuery.Data>> = repositoryDetailSubject.hide()
   val commits: Observable<List<GithubRepositoryCommitsQuery.Edge>> = commitsSubject.hide()
@@ -34,7 +34,7 @@ abstract class  GitHubDataSource(protected val apolloClient: ApolloClient) {
   abstract fun fetchCommits(repositoryName: String)
   abstract fun cancelFetching()
 
-  protected fun mapRepositoriesResponseToRepositories(response: Response<GithubRepositoriesQuery.Data>): List<RepositoryFragment> {
-    return response.data?.viewer?.repositories?.nodes?.mapNotNull { it?.fragments?.repositoryFragment } ?: emptyList()
+  protected fun mapRepositoriesResponseToRepositories(response: Response<GithubRepositoriesQuery.Data>): List<RepositorySummary> {
+    return response.data?.viewer?.repositories?.nodes?.mapNotNull { it?.fragments?.repositorySummary } ?: emptyList()
   }
 }

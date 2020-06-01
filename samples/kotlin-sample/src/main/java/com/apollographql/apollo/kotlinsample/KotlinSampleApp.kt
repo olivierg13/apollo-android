@@ -28,7 +28,7 @@ class KotlinSampleApp : Application() {
     val logInterceptor = HttpLoggingInterceptor(
         object : HttpLoggingInterceptor.Logger {
           override fun log(message: String) {
-            Log.d("OkHttp", message)
+            Log.d("ApolloCache - Network", message)
           }
         }
     ).apply { level = HttpLoggingInterceptor.Level.BODY }
@@ -48,6 +48,7 @@ class KotlinSampleApp : Application() {
     val cacheKeyResolver = object : CacheKeyResolver() {
       override fun fromFieldRecordSet(field: ResponseField, recordSet: Map<String, Any>): CacheKey {
         return if (recordSet["__typename"] == "Repository") {
+          Log.e("ApolloCache", "cacheKeyResolver.fromFieldRecordSet ${recordSet["name"]}")
           CacheKey(recordSet["name"] as String)
         } else {
           CacheKey.NO_KEY
@@ -55,7 +56,8 @@ class KotlinSampleApp : Application() {
       }
 
       override fun fromFieldArguments(field: ResponseField, variables: Operation.Variables): CacheKey {
-        return if (variables.valueMap().containsKey("name")) {
+        return if (variables.valueMap().containsKey("name") && field.fieldName == "repository") {
+          Log.e("ApolloCache", "cacheKeyResolver.fromFieldArguments ${variables.valueMap()["name"]}")
           CacheKey(variables.valueMap()["name"] as String)
         } else {
           CacheKey.NO_KEY

@@ -36,7 +36,6 @@ class ApolloCallbackService(apolloClient: ApolloClient) : GitHubDataSource(apoll
 
     apolloClient
         .query(repositoriesQuery)
-        .httpCachePolicy(HttpCachePolicy.CACHE_FIRST)
         .enqueue(callback)
   }
 
@@ -57,7 +56,6 @@ class ApolloCallbackService(apolloClient: ApolloClient) : GitHubDataSource(apoll
 
     apolloClient
         .query(repositorySummaryQuery)
-        .httpCachePolicy(HttpCachePolicy.CACHE_FIRST)
         .enqueue(callback)
   }
 
@@ -79,7 +77,6 @@ class ApolloCallbackService(apolloClient: ApolloClient) : GitHubDataSource(apoll
 
     apolloClient
         .query(repositoryDetailQuery)
-        .httpCachePolicy(HttpCachePolicy.CACHE_FIRST)
         .enqueue(callback)
   }
 
@@ -102,7 +99,6 @@ class ApolloCallbackService(apolloClient: ApolloClient) : GitHubDataSource(apoll
 
     apolloClient
         .query(commitsQuery)
-        .httpCachePolicy(HttpCachePolicy.CACHE_FIRST)
         .enqueue(callback)
   }
 

@@ -5,12 +5,12 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.apollographql.apollo.kotlinsample.R
-import com.apollographql.apollo.kotlinsample.fragment.RepositoryFragment
+import com.apollographql.apollo.kotlinsample.fragment.RepositorySummary
 import kotlinx.android.synthetic.main.item_repository.view.*
 
-class RepositoriesAdapter(private val onClick: (RepositoryFragment) -> Unit) : RecyclerView.Adapter<RepositoriesAdapter.ViewHolder>() {
+class RepositoriesAdapter(private val onClick: (RepositorySummary) -> Unit) : RecyclerView.Adapter<RepositoriesAdapter.ViewHolder>() {
 
-  private var data: List<RepositoryFragment> = ArrayList()
+  private var data: List<RepositorySummary> = ArrayList()
 
   override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
     return ViewHolder(
@@ -24,13 +24,13 @@ class RepositoriesAdapter(private val onClick: (RepositoryFragment) -> Unit) : R
     holder.bind(data[position], onClick)
   }
 
-  fun setItems(data: List<RepositoryFragment>) {
+  fun setItems(data: List<RepositorySummary>) {
     this.data = data
     notifyDataSetChanged()
   }
 
   class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-    fun bind(repositoryFragment: RepositoryFragment, onClick: (RepositoryFragment) -> Unit) {
+    fun bind(repositoryFragment: RepositorySummary, onClick: (RepositorySummary) -> Unit) {
       itemView.run {
         tvRepositoryName.text = repositoryFragment.name
         if (repositoryFragment.description == null) {

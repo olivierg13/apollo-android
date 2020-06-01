@@ -66,15 +66,20 @@ class RepositoryDetailActivity : AppCompatActivity() {
     compositeDisposable.add(errorDisposable)
   }
 
-  private fun handleSummaryResponse(response: Response<GithubRepositorySummaryQuery.Data>) {
+  private fun handleResponseForVisibility() {
     progressBar.visibility = View.GONE
     tvError.visibility = View.GONE
     buttonCommits.visibility = View.VISIBLE
+  }
+
+  private fun handleSummaryResponse(response: Response<GithubRepositorySummaryQuery.Data>) {
+    handleResponseForVisibility()
     updateUISummary(response)
     dataSource.fetchRepositoryDetail(repositoryName = repoName)
   }
 
   private fun handleDetailResponse(response: Response<GithubRepositoryDetailQuery.Data>) {
+    handleResponseForVisibility()
     updateUIDetail(response)
   }
 
@@ -88,11 +93,12 @@ class RepositoryDetailActivity : AppCompatActivity() {
   private fun fetchRepository(repoName: String) {
     buttonCommits.visibility = View.GONE
 
-    dataSource.fetchRepositorySummary(repositoryName = repoName)
+//    dataSource.fetchRepositorySummary(repositoryName = repoName)
+    dataSource.fetchRepositoryDetail(repositoryName = repoName)
   }
 
   private fun updateUISummary(response: Response<GithubRepositorySummaryQuery.Data>) {
-    response.data?.viewer?.repository?.fragments?.repositoryFragment?.run {
+    response.data?.viewer?.repository?.fragments?.repositorySummary?.run {
       tvRepositoryName.text = name
       tvRepositoryDescription.text = description
       buttonCommits.setOnClickListener {
@@ -103,16 +109,21 @@ class RepositoryDetailActivity : AppCompatActivity() {
 
   @SuppressLint("SetTextI18n")
   private fun updateUIDetail(response: Response<GithubRepositoryDetailQuery.Data>) {
-    response.data?.viewer?.repository?.fragments?.repositoryDetail?.run {
-      tvRepositoryName.text = fragments.repositoryFragment.name
-      tvRepositoryDescription.text = fragments.repositoryFragment.description
-      tvRepositoryForks.text = "$forkCount Forks"
-      tvRepositoryIssues.text = "${issues.totalCount} Issues"
-      tvRepositoryPullRequests.text = "${pullRequests.totalCount} Pull requests"
-      tvRepositoryReleases.text = "${releases.totalCount} Releases"
-      tvRepositoryStars.text = "${stargazers.totalCount} Stars"
-      buttonCommits.setOnClickListener {
-        CommitsActivity.start(this@RepositoryDetailActivity, fragments.repositoryFragment.name)
+    response.data?.viewer?.repository?.fragments?.run {
+      this.repositorySummary.run {
+        tvRepositoryName.text = name
+        tvRepositoryDescription.text = description
+        buttonCommits.setOnClickListener {
+          CommitsActivity.start(this@RepositoryDetailActivity, name)
+        }
+      }
+
+      this.repositoryDetail.run {
+        tvRepositoryForks.text = "$forkCount Forks"
+        tvRepositoryIssues.text = "${issues.totalCount} Issues"
+        tvRepositoryPullRequests.text = "${pullRequests.totalCount} Pull requests"
+        tvRepositoryReleases.text = "${releases.totalCount} Releases"
+        tvRepositoryStars.text = "${stargazers.totalCount} Stars"
       }
     }
   }

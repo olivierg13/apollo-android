@@ -10,7 +10,7 @@ import com.apollographql.apollo.kotlinsample.BuildConfig
 import com.apollographql.apollo.kotlinsample.KotlinSampleApp
 import com.apollographql.apollo.kotlinsample.R
 import com.apollographql.apollo.kotlinsample.data.GitHubDataSource
-import com.apollographql.apollo.kotlinsample.fragment.RepositoryFragment
+import com.apollographql.apollo.kotlinsample.fragment.RepositorySummary
 import com.apollographql.apollo.kotlinsample.repositoryDetail.RepositoryDetailActivity
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
@@ -67,7 +67,7 @@ class MainActivity : AppCompatActivity() {
     compositeDisposable.add(errorDisposable)
   }
 
-  private fun handleRepositories(repos: List<RepositoryFragment>) {
+  private fun handleRepositories(repos: List<RepositorySummary>) {
     progressBar.visibility = View.GONE
     rvRepositories.visibility = View.VISIBLE
     repositoriesAdapter.setItems(repos)

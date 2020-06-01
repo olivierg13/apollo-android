@@ -1,54 +1,10 @@
-query GithubRepositories(
-  $repositoriesCount: Int!
-  $orderBy: RepositoryOrderField!
-  $orderDirection: OrderDirection!
-) {
-  viewer {
-    repositories(
-      first: $repositoriesCount
-      orderBy: { field: $orderBy, direction: $orderDirection }
-      ownerAffiliations: [OWNER]
-    ) {
-      nodes {
-        ...RepositoryFragment
-      }
-    }
-  }
-}
-
-fragment RepositoryFragment on Repository {
+fragment RepositorySummary on Repository {
   id
   name
   description
 }
 
-query GithubRepositorySummary(
-  $name: String!
-) {
-  viewer {
-    repository(name: $name) {
-      # parent {
-      ...RepositoryFragment
-      # }
-    }
-  }
-}
-
-query GithubRepositoryDetail(
-  $name: String!
-  $pullRequestStates: [PullRequestState!]!
-) {
-  viewer {
-    repository(name: $name) {
-      # parent {
-      ...RepositoryDetail
-      # }
-    }
-  }
-}
-
 fragment RepositoryDetail on Repository {
-  ...RepositoryFragment
   issues {
     totalCount
   }
@@ -61,5 +17,49 @@ fragment RepositoryDetail on Repository {
   forkCount
   releases {
     totalCount
+  }
+}
+
+query GithubRepositories(
+  $repositoriesCount: Int!
+  $orderBy: RepositoryOrderField!
+  $orderDirection: OrderDirection!
+) {
+  viewer {
+    repositories(
+      first: $repositoriesCount
+      orderBy: { field: $orderBy, direction: $orderDirection }
+      ownerAffiliations: [OWNER]
+    ) {
+      nodes {
+        ...RepositorySummary
+      }
+    }
+  }
+}
+
+query GithubRepositorySummary(
+  $name: String!
+) {
+  viewer {
+    repository(name: $name) {
+      # parent {
+      ...RepositorySummary
+      # }
+    }
+  }
+}
+
+query GithubRepositoryDetail(
+  $name: String!
+  $pullRequestStates: [PullRequestState!]!
+) {
+  viewer {
+    repository(name: $name) {
+      # parent {
+      ...RepositorySummary
+      ...RepositoryDetail
+      # }
+    }
   }
 }
