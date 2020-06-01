@@ -48,8 +48,9 @@ class KotlinSampleApp : Application() {
     val cacheKeyResolver = object : CacheKeyResolver() {
       override fun fromFieldRecordSet(field: ResponseField, recordSet: Map<String, Any>): CacheKey {
         return if (recordSet["__typename"] == "Repository") {
-          Log.e("ApolloCache", "cacheKeyResolver.fromFieldRecordSet ${recordSet["name"]}")
-          CacheKey(recordSet["name"] as String)
+          val cacheKeyName = "${field.fieldName}${recordSet["name"]}"
+          Log.e("ApolloCache", "cacheKeyResolver.fromFieldRecordSet $cacheKeyName")
+          CacheKey(cacheKeyName)
         } else {
           CacheKey.NO_KEY
         }
@@ -57,8 +58,9 @@ class KotlinSampleApp : Application() {
 
       override fun fromFieldArguments(field: ResponseField, variables: Operation.Variables): CacheKey {
         return if (variables.valueMap().containsKey("name") && field.fieldName == "repository") {
-          Log.e("ApolloCache", "cacheKeyResolver.fromFieldArguments ${variables.valueMap()["name"]}")
-          CacheKey(variables.valueMap()["name"] as String)
+          val cacheKeyName = "${field.fieldName}${variables.valueMap()["name"]}"
+          Log.e("ApolloCache", "cacheKeyResolver.fromFieldArguments $cacheKeyName")
+          CacheKey(cacheKeyName)
         } else {
           CacheKey.NO_KEY
         }
