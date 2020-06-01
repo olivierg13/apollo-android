@@ -93,8 +93,7 @@ class RepositoryDetailActivity : AppCompatActivity() {
   private fun fetchRepository(repoName: String) {
     buttonCommits.visibility = View.GONE
 
-//    dataSource.fetchRepositorySummary(repositoryName = repoName)
-    dataSource.fetchRepositoryDetail(repositoryName = repoName)
+    dataSource.fetchRepositorySummary(repositoryName = repoName)
   }
 
   private fun updateUISummary(response: Response<GithubRepositorySummaryQuery.Data>) {
