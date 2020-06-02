@@ -5,9 +5,6 @@ import android.util.Log
 import com.apollographql.apollo.ApolloClient
 import com.apollographql.apollo.api.Operation
 import com.apollographql.apollo.api.ResponseField
-import com.apollographql.apollo.api.cache.http.HttpCachePolicy
-import com.apollographql.apollo.cache.http.ApolloHttpCache
-import com.apollographql.apollo.cache.http.DiskLruHttpCacheStore
 import com.apollographql.apollo.cache.normalized.CacheKey
 import com.apollographql.apollo.cache.normalized.CacheKeyResolver
 import com.apollographql.apollo.cache.normalized.lru.EvictionPolicy
@@ -20,7 +17,7 @@ import com.apollographql.apollo.kotlinsample.data.ApolloWatcherService
 import com.apollographql.apollo.kotlinsample.data.GitHubDataSource
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
-import java.io.File
+import java.util.Locale
 
 class KotlinSampleApp : Application() {
   private val baseUrl = "https://api.github.com/graphql"
@@ -48,7 +45,7 @@ class KotlinSampleApp : Application() {
     val cacheKeyResolver = object : CacheKeyResolver() {
       override fun fromFieldRecordSet(field: ResponseField, recordSet: Map<String, Any>): CacheKey {
         return if (recordSet["__typename"] == "Repository") {
-          val cacheKeyName = "${field.fieldName}.${recordSet["name"]}"
+          val cacheKeyName = "${recordSet["__typename"].toString().toLowerCase(Locale.US)}.${recordSet["name"]}"
           Log.e("ApolloCache", "cacheKeyResolver.fromFieldRecordSet $cacheKeyName")
           CacheKey(cacheKeyName)
         } else {
