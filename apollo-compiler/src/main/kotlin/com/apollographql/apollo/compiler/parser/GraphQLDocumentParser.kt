@@ -141,6 +141,7 @@ class GraphQLDocumentParser(val schema: Schema, private val packageNameProvider:
         source = graphQLDocumentSource,
         sourceWithFragments = graphQLDocumentSource,
         fields = fields.result.filterNot { it.responseName == Field.TYPE_NAME_FIELD.responseName },
+        fragments = selectionSet().fragmentRefs(),
         fragmentsReferenced = emptyList(),
         filePath = graphQLFilePath
     ).also { it.validateArguments(schema = schema) }
@@ -242,6 +243,7 @@ class GraphQLDocumentParser(val schema: Schema, private val packageNameProvider:
     val hasInlineFragments = this?.selection()?.find { it.inlineFragment() != null } != null
     val hasFragments = this?.selection()?.find { it.fragmentSpread() != null } != null
     val hasFields = this?.selection()?.find { it.field() != null } != null
+
     return this
         ?.selection()
         ?.mapNotNull { ctx -> ctx.field()?.parse(schemaType) }
@@ -265,7 +267,7 @@ class GraphQLDocumentParser(val schema: Schema, private val packageNameProvider:
               usedTypes = usedTypes
           )
         }
-        ?: ParseResult(result = emptyList(), usedTypes = emptySet())
+        ?: ParseResult(result = if (hasFragments) listOf(Field.TYPE_NAME_FIELD) else emptyList(), usedTypes = emptySet())
   }
 
   private fun GraphQLParser.FieldContext.parse(schemaType: Schema.Type): ParseResult<Field> {
@@ -284,19 +286,28 @@ class GraphQLDocumentParser(val schema: Schema, private val packageNameProvider:
     )
     val arguments = arguments().parse(schemaField)
     val fields = selectionSet().parse(schemaFieldType)
+
+    if (fields.result.isEmpty() && (schemaFieldType.kind == Schema.Kind.INTERFACE ||
+        schemaFieldType.kind == Schema.Kind.OBJECT ||
+        schemaFieldType.kind == Schema.Kind.UNION)) {
+      throw ParseException(
+            message = "Field `$fieldName` of type `${schemaType.name}` must have a selection of sub-fields",
+            token = start
+        )
+    }
+
     val fragmentRefs = selectionSet().fragmentRefs()
-    val inlineFragments = selectionSet()?.selection()?.mapNotNull { ctx ->
+    val inlineFragmentsResult = selectionSet()?.selection()?.mapNotNull { ctx ->
       ctx.inlineFragment()?.parse(parentSchemaType = schemaFieldType, parentFields = fields)
     }?.flatten() ?: ParseResult(result = emptyList())
 
-    val inlineFragmentFieldsToMerge = inlineFragments.result
-        .filter { it.typeCondition == schemaFieldType.name }
+    val (inlineFragments, inlineFragmentsToMerge) = inlineFragmentsResult.result.partition {
+      it.typeCondition != schemaFieldType.name || it.conditions.isNotEmpty()
+    }
+    val inlineFragmentFieldsToMerge = inlineFragmentsToMerge
         .flatMap { it.fields }
         .filter { it.responseName != Field.TYPE_NAME_FIELD.responseName }
-    val inlineFragmentRefsToMerge = inlineFragments.result
-        .filter { it.typeCondition == schemaFieldType.name }
-        .flatMap { it.fragmentRefs }
-
+    val inlineFragmentRefsToMerge = inlineFragmentsToMerge.flatMap { it.fragments }
     val mergedFields = fields.result.mergeFields(others = inlineFragmentFieldsToMerge)
 
     val conditions = directives().parse()
@@ -310,7 +321,7 @@ class GraphQLDocumentParser(val schema: Schema, private val packageNameProvider:
             isConditional = conditions.isNotEmpty(),
             fields = mergedFields,
             fragmentRefs = fragmentRefs.union(inlineFragmentRefsToMerge).toList(),
-            inlineFragments = inlineFragments.result.filter { it.typeCondition != schemaFieldType.name }.map {
+            inlineFragments = inlineFragments.map {
               it.copy(
                   fields = it.fields.mergeFields(others = mergedFields)
               )
@@ -324,7 +335,7 @@ class GraphQLDocumentParser(val schema: Schema, private val packageNameProvider:
         usedTypes = setOf(schemaField.type.rawType.name!!)
             .union(arguments.usedTypes)
             .union(fields.usedTypes)
-            .union(inlineFragments.usedTypes)
+            .union(inlineFragmentsResult.usedTypes)
     )
   }
 
@@ -449,7 +460,7 @@ class GraphQLDocumentParser(val schema: Schema, private val packageNameProvider:
             possibleTypes = possibleTypes,
             description = schemaType.description ?: "",
             fields = fields.result,
-            fragmentRefs = selectionSet().fragmentRefs(),
+            fragments = selectionSet().fragmentRefs(),
             sourceLocation = SourceLocation(start),
             conditions = directives().parse()
         ),
@@ -495,7 +506,7 @@ class GraphQLDocumentParser(val schema: Schema, private val packageNameProvider:
         .filter { it.responseName != Field.TYPE_NAME_FIELD.responseName }
     val mergeInlineFragmentRefs = inlineFragments.result
         .filter { it.typeCondition == typeCondition }
-        .flatMap { it.fragmentRefs }
+        .flatMap { it.fragments }
 
     val commentTokens = tokenStream.getHiddenTokensToLeft(start.tokenIndex, 2) ?: emptyList()
     val description = commentTokens.joinToString(separator = "\n") { token ->
@@ -749,12 +760,12 @@ class GraphQLDocumentParser(val schema: Schema, private val packageNameProvider:
   }
 
   private fun InlineFragment.referencedFragments(fragments: List<Fragment>, filePath: String): Set<String> {
-    val referencedFragments = fragmentRefs.findFragments(
+    val referencedFragments = this.fragments.findFragments(
         typeCondition = typeCondition,
         fragments = fragments,
         filePath = filePath
     )
-    return fragmentRefs.map { it.name }
+    return this.fragments.map { it.name }
         .union(fields.referencedFragmentNames(fragments = fragments, filePath = filePath))
         .union(referencedFragments.flatMap { it.referencedFragments(fragments) })
   }
